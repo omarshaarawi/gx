@@ -423,14 +423,14 @@ func TestParser_ConsistencyBetweenMethods(t *testing.T) {
 	})
 }
 
-func createTempGoMod(t *testing.T, content string) string {
-	t.Helper()
+func createTempGoMod(tb testing.TB, content string) string {
+	tb.Helper()
 
-	tmpDir := t.TempDir()
+	tmpDir := tb.TempDir()
 	tmpFile := filepath.Join(tmpDir, "go.mod")
 
 	if err := os.WriteFile(tmpFile, []byte(content), 0o644); err != nil {
-		t.Fatalf("Failed to create temp go.mod: %v", err)
+		tb.Fatalf("Failed to create temp go.mod: %v", err)
 	}
 
 	return tmpFile
