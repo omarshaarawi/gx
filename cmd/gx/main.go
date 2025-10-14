@@ -4,19 +4,21 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/omarshaarawi/gx/internal/commands/outdated"
 	"github.com/spf13/cobra"
 )
 
 var version = "dev"
 
 var rootCmd = &cobra.Command{
-	Use:   "gx",
-	Short: "My personal tooling for Go",
+	Use:     "gx",
+	Short:   "My personal tooling for Go",
 	Version: version,
 }
 
 func init() {
 	rootCmd.SetVersionTemplate(`{{.Version}}`)
+	rootCmd.AddCommand(outdated.NewCommand())
 }
 
 func main() {
@@ -25,4 +27,3 @@ func main() {
 		os.Exit(1)
 	}
 }
-
