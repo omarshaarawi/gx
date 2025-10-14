@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/omarshaarawi/gx/internal/commands/audit"
 	"github.com/omarshaarawi/gx/internal/commands/outdated"
 	"github.com/spf13/cobra"
 )
@@ -19,6 +20,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.SetVersionTemplate(`{{.Version}}`)
 	rootCmd.AddCommand(outdated.NewCommand())
+	rootCmd.AddCommand(audit.NewCommand())
 }
 
 func main() {
