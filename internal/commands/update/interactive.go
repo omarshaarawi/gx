@@ -22,7 +22,6 @@ var (
 	targetStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("green"))
 	latestStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("yellow"))
 	directStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("green"))
-	indirectStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("yellow"))
 	dimmedStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 
 	pkgNameStyle    = lipgloss.NewStyle().Width(40).MaxWidth(40)
