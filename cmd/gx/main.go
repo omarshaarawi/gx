@@ -6,6 +6,7 @@ import (
 
 	"github.com/omarshaarawi/gx/internal/commands/audit"
 	"github.com/omarshaarawi/gx/internal/commands/outdated"
+	"github.com/omarshaarawi/gx/internal/commands/update"
 	"github.com/spf13/cobra"
 )
 
@@ -21,6 +22,7 @@ func init() {
 	rootCmd.SetVersionTemplate(`{{.Version}}`)
 	rootCmd.AddCommand(outdated.NewCommand())
 	rootCmd.AddCommand(audit.NewCommand())
+	rootCmd.AddCommand(update.NewCommand())
 }
 
 func main() {
