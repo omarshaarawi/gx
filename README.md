@@ -46,3 +46,23 @@ gx audit --severity=high,critical
 gx audit --json
 ```
 
+### `gx update`
+
+Interactive dependency updater with a TUI for selecting which packages to update. Shows current, target, and latest versions in a clean interface where you can pick exactly what you want to update.
+
+The standard `go get -u` updates everything, and `go get -u <package>` requires you to know exactly what you want ahead of time. This gives you an interactive menu to choose which updates to apply, especially useful when you want to be selective about major version bumps.
+
+```bash
+# Interactive mode with TUI
+gx update -i
+
+# Update all outdated dependencies (when complete)
+gx update --all
+
+# Dry run to preview changes
+gx update -i --dry-run
+
+# Include major version updates
+gx update -i --major
+```
+
