@@ -16,6 +16,7 @@ type Cache interface {
 type MemoryCache struct {
 	mu      sync.RWMutex
 	entries map[string]*cacheEntry
+	done    chan struct{}
 }
 
 type cacheEntry struct {
@@ -27,6 +28,7 @@ type cacheEntry struct {
 func NewMemoryCache() *MemoryCache {
 	c := &MemoryCache{
 		entries: make(map[string]*cacheEntry),
+		done:    make(chan struct{}),
 	}
 
 	go c.cleanup()
@@ -70,20 +72,28 @@ func (c *MemoryCache) Clear() {
 	c.entries = make(map[string]*cacheEntry)
 }
 
-// cleanup removes expired entries periodically
+func (c *MemoryCache) Close() {
+	close(c.done)
+}
+
 func (c *MemoryCache) cleanup() {
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		c.mu.Lock()
-		now := time.Now()
-		for key, entry := range c.entries {
-			if now.After(entry.expiration) {
-				delete(c.entries, key)
+	for {
+		select {
+		case <-c.done:
+			return
+		case <-ticker.C:
+			c.mu.Lock()
+			now := time.Now()
+			for key, entry := range c.entries {
+				if now.After(entry.expiration) {
+					delete(c.entries, key)
+				}
 			}
+			c.mu.Unlock()
 		}
-		c.mu.Unlock()
 	}
 }
 

@@ -37,8 +37,7 @@ type Package struct {
 }
 
 // Run executes the outdated command
-func Run(opts Options) error {
-	ctx := context.Background()
+func Run(ctx context.Context, opts Options) error {
 
 	parser, err := modfile.NewParser(opts.ModPath)
 	if err != nil {

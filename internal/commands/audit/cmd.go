@@ -61,6 +61,6 @@ func runAudit(cmd *cobra.Command, args []string) error {
 		ModPath:  modPath,
 	}
 
-	return Run(opts)
+	return Run(cmd.Context(), opts)
 }
 

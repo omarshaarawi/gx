@@ -26,8 +26,7 @@ type Options struct {
 }
 
 // Run executes the audit command
-func Run(opts Options) error {
-	ctx := context.Background()
+func Run(ctx context.Context, opts Options) error {
 
 	scanner, err := vulndb.NewScanner()
 	if err != nil {
