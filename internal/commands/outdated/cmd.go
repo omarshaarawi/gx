@@ -51,3 +51,4 @@ func runOutdated(cmd *cobra.Command, args []string) error {
 
 	return Run(opts)
 }
+

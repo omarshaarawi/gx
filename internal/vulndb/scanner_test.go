@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -669,7 +668,7 @@ func BenchmarkFilterBySeverity(b *testing.B) {
 	vulns := make([]*Vulnerability, 100)
 	severities := []string{"CRITICAL", "HIGH", "MODERATE", "LOW", "UNKNOWN"}
 
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		vulns[i] = &Vulnerability{
 			ID:       "V" + string(rune(i)),
 			Severity: severities[i%len(severities)],

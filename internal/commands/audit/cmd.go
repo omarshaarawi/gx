@@ -32,11 +32,35 @@ Examples:
 
   # Save report to file
   gx audit --json > report.json`,
+		RunE: runAudit,
 	}
 
 	cmd.Flags().StringVar(&flagSeverity, "severity", "", "Filter by severity (comma-separated: critical,high,medium,low)")
 	cmd.Flags().BoolVar(&flagJSON, "json", false, "Output results as JSON")
 
 	return cmd
+}
+
+func runAudit(cmd *cobra.Command, args []string) error {
+	modPath := "go.mod"
+	if _, err := os.Stat(modPath); os.IsNotExist(err) {
+		return fmt.Errorf("go.mod not found in current directory")
+	}
+
+	var severities []string
+	if flagSeverity != "" {
+		severities = strings.Split(flagSeverity, ",")
+		for i, s := range severities {
+			severities[i] = strings.ToUpper(strings.TrimSpace(s))
+		}
+	}
+
+	opts := Options{
+		Severity: severities,
+		JSON:     flagJSON,
+		ModPath:  modPath,
+	}
+
+	return Run(opts)
 }
 
