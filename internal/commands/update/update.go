@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/omarshaarawi/gx/internal/modfile"
 	"github.com/omarshaarawi/gx/internal/proxy"
@@ -103,8 +104,10 @@ func Run(ctx context.Context, opts Options) error {
 
 	fmt.Printf("\n✓ Successfully updated %d package(s)\n", len(toUpdate))
 
+	workDir := filepath.Dir(opts.ModPath)
+
 	fmt.Println("\n🔧 Running go mod tidy...")
-	if err := runGoModTidy(); err != nil {
+	if err := runGoCommand(ctx, workDir, "mod", "tidy"); err != nil {
 		fmt.Printf("⚠️  Warning: go mod tidy failed: %v\n", err)
 		fmt.Println("   You may need to run 'go mod tidy' manually")
 		return nil
@@ -113,7 +116,7 @@ func Run(ctx context.Context, opts Options) error {
 
 	if opts.Vendor {
 		fmt.Println("\n📦 Running go mod vendor...")
-		if err := runGoModVendor(); err != nil {
+		if err := runGoCommand(ctx, workDir, "mod", "vendor"); err != nil {
 			fmt.Printf("⚠️  Warning: go mod vendor failed: %v\n", err)
 			fmt.Println("   You may need to run 'go mod vendor' manually")
 		} else {
@@ -124,19 +127,11 @@ func Run(ctx context.Context, opts Options) error {
 	return nil
 }
 
-// runGoModTidy runs 'go mod tidy' to clean up dependencies
-func runGoModTidy() error {
-	cmd := exec.Command("go", "mod", "tidy")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%w: %s", err, string(output))
+func runGoCommand(ctx context.Context, dir string, args ...string) error {
+	cmd := exec.CommandContext(ctx, "go", args...)
+	if dir != "" && dir != "." {
+		cmd.Dir = dir
 	}
-	return nil
-}
-
-// runGoModVendor runs 'go mod vendor' to update vendor directory
-func runGoModVendor() error {
-	cmd := exec.Command("go", "mod", "vendor")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%w: %s", err, string(output))

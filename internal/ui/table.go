@@ -7,17 +7,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var (
-	HeaderStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("12"))
-	CellStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("252"))
-	BorderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-
-	PatchStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))  // Green
-	MinorStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("11"))  // Yellow
-	MajorStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))   // Red
-	UpToDateStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240")) // Gray
-)
-
 // Table represents a simple text table
 type Table struct {
 	Headers []string
@@ -162,22 +151,6 @@ func TruncateString(s string, maxWidth int) string {
 		return s[:maxWidth]
 	}
 	return s[:maxWidth-3] + "..."
-}
-
-// FormatVersionUpdate returns a styled version update string
-func FormatVersionUpdate(updateType string) lipgloss.Style {
-	switch updateType {
-	case "major":
-		return MajorStyle
-	case "minor":
-		return MinorStyle
-	case "patch":
-		return PatchStyle
-	case "none":
-		return UpToDateStyle
-	default:
-		return CellStyle
-	}
 }
 
 // SimpleTable creates and renders a simple table in one call

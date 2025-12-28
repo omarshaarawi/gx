@@ -13,13 +13,6 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-var (
-	directHeaderStyle   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("12"))
-	indirectHeaderStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("240"))
-	summaryStyle        = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("11"))
-	ctaStyle            = lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
-)
-
 // Options configures the outdated command
 type Options struct {
 	DirectOnly bool
@@ -110,13 +103,13 @@ func renderGroupedTables(directPkgs, indirectPkgs []Package) {
 	maxNameWidth := 45
 
 	if len(directPkgs) > 0 {
-		fmt.Println(directHeaderStyle.Render("\n📦 Direct Dependencies"))
+		fmt.Println(ui.DirectHeaderStyle.Render("\n📦 Direct Dependencies"))
 		fmt.Println()
 		renderPackageTable(directPkgs, maxNameWidth)
 	}
 
 	if len(indirectPkgs) > 0 {
-		fmt.Println(indirectHeaderStyle.Render("\n🔗 Indirect Dependencies"))
+		fmt.Println(ui.IndirectHeaderStyle.Render("\n🔗 Indirect Dependencies"))
 		fmt.Println()
 		renderPackageTable(indirectPkgs, maxNameWidth)
 	}
@@ -134,7 +127,7 @@ func renderGroupedTables(directPkgs, indirectPkgs []Package) {
 		}
 	}
 
-	fmt.Printf("\n%s ", summaryStyle.Render("📊 Summary:"))
+	fmt.Printf("\n%s ", ui.SummaryStyle.Render("📊 Summary:"))
 	fmt.Printf("%d package(s) can be updated", totalPkgs)
 
 	var parts []string
@@ -153,7 +146,7 @@ func renderGroupedTables(directPkgs, indirectPkgs []Package) {
 	}
 	fmt.Println()
 
-	fmt.Printf("\n💡 %s\n", ctaStyle.Render("Run `gx update -i` to choose which packages to update"))
+	fmt.Printf("\n💡 %s\n", ui.CTAStyle.Render("Run `gx update -i` to choose which packages to update"))
 }
 
 // renderPackageTable renders a table of packages

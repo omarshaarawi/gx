@@ -6,16 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/omarshaarawi/gx/internal/ui"
 	"github.com/omarshaarawi/gx/internal/vulndb"
-)
-
-var (
-	criticalStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true)
-	highStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("208"))
-	mediumStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("11"))
-	lowStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
 )
 
 // Options configures the audit command
@@ -95,7 +87,7 @@ func outputTable(vulns []*vulndb.Vulnerability, result *vulndb.ScanResult) error
 			continue
 		}
 
-		style := getSeverityStyle(sev)
+		style := ui.SeverityStyle(sev)
 		fmt.Printf("\n%s (%d)\n", style.Render(sev), len(sevVulns))
 		fmt.Println(strings.Repeat("─", 80))
 
@@ -118,7 +110,7 @@ func outputTable(vulns []*vulndb.Vulnerability, result *vulndb.ScanResult) error
 
 	for _, sev := range severities {
 		if count, exists := bySeverity[sev]; exists && len(count) > 0 {
-			style := getSeverityStyle(sev)
+			style := ui.SeverityStyle(sev)
 			fmt.Printf("  %s: %d\n", style.Render(sev), len(count))
 		}
 	}
@@ -126,20 +118,5 @@ func outputTable(vulns []*vulndb.Vulnerability, result *vulndb.ScanResult) error
 	fmt.Println("\nRun 'gx update -i' to update vulnerable packages")
 
 	return nil
-}
-
-func getSeverityStyle(severity string) lipgloss.Style {
-	switch strings.ToUpper(severity) {
-	case "CRITICAL":
-		return criticalStyle
-	case "HIGH":
-		return highStyle
-	case "MEDIUM":
-		return mediumStyle
-	case "LOW":
-		return lowStyle
-	default:
-		return ui.CellStyle
-	}
 }
 

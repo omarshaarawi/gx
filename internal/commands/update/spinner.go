@@ -11,85 +11,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/omarshaarawi/gx/internal/modfile"
 	"github.com/omarshaarawi/gx/internal/proxy"
+	"github.com/omarshaarawi/gx/internal/ui"
 	xmodfile "golang.org/x/mod/modfile"
 	"golang.org/x/mod/semver"
 )
-
-type fetchDepsResult struct {
-	deps []*Dependency
-	err  error
-}
-
-type loadSpinnerModel struct {
-	spinner  spinner.Model
-	message  string
-	total    int
-	loaded   int
-	quitting bool
-	err      error
-	done     bool
-	result   []*Dependency
-}
-
-func newLoadSpinnerModel(message string, total int, _ chan fetchDepsResult) loadSpinnerModel {
-	s := spinner.New()
-	s.Spinner = spinner.Dot
-	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-	return loadSpinnerModel{
-		spinner: s,
-		message: message,
-		total:   total,
-	}
-}
-
-func (m loadSpinnerModel) Init() tea.Cmd {
-	return m.spinner.Tick
-}
-
-type loadProgressMsg int
-
-func (m loadSpinnerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		if msg.String() == "ctrl+c" {
-			m.quitting = true
-			return m, tea.Quit
-		}
-		return m, nil
-
-	case loadProgressMsg:
-		m.loaded = int(msg)
-		return m, nil
-
-	case fetchDepsResult:
-		m.done = true
-		m.err = msg.err
-		m.result = msg.deps
-		return m, tea.Quit
-
-	default:
-		var cmd tea.Cmd
-		m.spinner, cmd = m.spinner.Update(msg)
-		return m, cmd
-	}
-}
-
-func (m loadSpinnerModel) View() string {
-	if m.quitting {
-		return ""
-	}
-
-	if m.done {
-		return ""
-	}
-
-	return fmt.Sprintf("\n %s %s (%d/%d dependencies loaded)\n",
-		m.spinner.View(),
-		m.message,
-		m.loaded,
-		m.total,
-	)
-}
 
 func loadDependenciesWithSpinner(ctx context.Context, parser *modfile.Parser, client *proxy.Client) ([]*Dependency, error) {
 	allReqs := parser.AllRequires()
@@ -97,38 +22,13 @@ func loadDependenciesWithSpinner(ctx context.Context, parser *modfile.Parser, cl
 		return nil, nil
 	}
 
-	progressCh := make(chan int, len(allReqs))
-	m := newLoadSpinnerModel("Checking for updates...", len(allReqs), nil)
-	p := tea.NewProgram(m)
-
-	go func() {
-		for loaded := range progressCh {
-			p.Send(loadProgressMsg(loaded))
-		}
-	}()
-
-	go func() {
-		deps, err := fetchDependenciesParallel(ctx, allReqs, client, progressCh)
-		close(progressCh)
-		p.Send(fetchDepsResult{deps: deps, err: err})
-	}()
-
-	finalModel, err := p.Run()
-	if err != nil {
-		return nil, err
-	}
-
-	final := finalModel.(loadSpinnerModel)
-
-	if final.quitting {
-		return nil, fmt.Errorf("cancelled by user")
-	}
-
-	if final.err != nil {
-		return nil, final.err
-	}
-
-	return final.result, nil
+	return ui.RunWithSpinner(ui.SpinnerTask[[]*Dependency]{
+		Message: "Checking for updates...",
+		Total:   len(allReqs),
+		Run: func(progress chan<- int) ([]*Dependency, error) {
+			return fetchDependenciesParallel(ctx, allReqs, client, progress)
+		},
+	})
 }
 
 func fetchDependenciesParallel(ctx context.Context, allReqs []*xmodfile.Require, client *proxy.Client, progressCh chan<- int) ([]*Dependency, error) {
@@ -308,4 +208,3 @@ func performUpdates(parser *modfile.Parser, deps []*Dependency, progressCh chan<
 
 	return nil
 }
-

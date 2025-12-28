@@ -2,129 +2,22 @@ package outdated
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 
-	"github.com/charmbracelet/bubbles/spinner"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/omarshaarawi/gx/internal/proxy"
+	"github.com/omarshaarawi/gx/internal/ui"
 	xmodfile "golang.org/x/mod/modfile"
 )
 
-type fetchResult struct {
-	packages []Package
-	err      error
-}
-
-type spinnerModel struct {
-	spinner  spinner.Model
-	message  string
-	total    int
-	checked  int
-	quitting bool
-	err      error
-	done     bool
-	result   []Package
-}
-
-func newSpinnerModel(message string, total int, _ chan fetchResult) spinnerModel {
-	s := spinner.New()
-	s.Spinner = spinner.Dot
-	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-	return spinnerModel{
-		spinner: s,
-		message: message,
-		total:   total,
-	}
-}
-
-func (m spinnerModel) Init() tea.Cmd {
-	return m.spinner.Tick
-}
-
-type progressMsg int
-
-func (m spinnerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		if msg.String() == "ctrl+c" {
-			m.quitting = true
-			return m, tea.Quit
-		}
-		return m, nil
-
-	case progressMsg:
-		m.checked = int(msg)
-		return m, nil
-
-	case fetchResult:
-		m.done = true
-		m.err = msg.err
-		m.result = msg.packages
-		return m, tea.Quit
-
-	default:
-		var cmd tea.Cmd
-		m.spinner, cmd = m.spinner.Update(msg)
-		return m, cmd
-	}
-}
-
-func (m spinnerModel) View() string {
-	if m.quitting {
-		return ""
-	}
-
-	if m.done {
-		if m.err != nil {
-			return ""
-		}
-		return ""
-	}
-
-	return fmt.Sprintf("\n %s %s (%d/%d packages checked)\n",
-		m.spinner.View(),
-		m.message,
-		m.checked,
-		m.total,
-	)
-}
-
 func fetchPackagesWithSpinner(ctx context.Context, proxyClient *proxy.Client, requires []*xmodfile.Require, opts Options) ([]Package, error) {
-	progressCh := make(chan int, len(requires))
-	m := newSpinnerModel("Checking for updates...", len(requires), nil)
-	p := tea.NewProgram(m)
-
-	go func() {
-		for checked := range progressCh {
-			p.Send(progressMsg(checked))
-		}
-	}()
-
-	go func() {
-		packages, err := fetchPackages(ctx, proxyClient, requires, opts, progressCh)
-		close(progressCh)
-		p.Send(fetchResult{packages: packages, err: err})
-	}()
-
-	finalModel, err := p.Run()
-	if err != nil {
-		return nil, err
-	}
-
-	final := finalModel.(spinnerModel)
-
-	if final.quitting {
-		return nil, fmt.Errorf("cancelled by user")
-	}
-
-	if final.err != nil {
-		return nil, final.err
-	}
-
-	return final.result, nil
+	return ui.RunWithSpinner(ui.SpinnerTask[[]Package]{
+		Message: "Checking for updates...",
+		Total:   len(requires),
+		Run: func(progress chan<- int) ([]Package, error) {
+			return fetchPackages(ctx, proxyClient, requires, opts, progress)
+		},
+	})
 }
 
 func fetchPackages(ctx context.Context, proxyClient *proxy.Client, requires []*xmodfile.Require, opts Options, progressCh chan<- int) ([]Package, error) {
@@ -181,4 +74,3 @@ func fetchPackages(ctx context.Context, proxyClient *proxy.Client, requires []*x
 	wg.Wait()
 	return packages, nil
 }
-
